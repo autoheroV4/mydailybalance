@@ -153,6 +153,7 @@ function App() {
             type="friction"
             title="Friction"
             subtitle="Что мешает"
+            hint="Отметь если удержался сегодня"
             count={friction.length}
             items={friction}
             onAdd={addHabit("friction")}
@@ -163,6 +164,7 @@ function App() {
             type="going"
             title="Going Well"
             subtitle="Что помогает"
+            hint="Отметь если уделил время этому"
             count={going.length}
             items={going}
             onAdd={addHabit("going")}
@@ -183,6 +185,7 @@ interface ColumnProps {
   type: HabitType;
   title: string;
   subtitle: string;
+  hint: string;
   count: number;
   items: Habit[];
   onAdd: (name: string) => void;
@@ -190,11 +193,11 @@ interface ColumnProps {
   onDelete: (id: string) => void;
 }
 
-function Column({ type, title, subtitle, count, items, onAdd, onToggle, onDelete }: ColumnProps) {
+function Column({ type, title, subtitle, hint, count, items, onAdd, onToggle, onDelete }: ColumnProps) {
   const isFriction = type === "friction";
   return (
     <section>
-      <div className="flex items-baseline justify-between mb-4 px-1">
+      <div className="flex items-baseline justify-between mb-1 px-1">
         <div className="flex items-baseline gap-3">
           <h2
             className={cn(
@@ -215,6 +218,7 @@ function Column({ type, title, subtitle, count, items, onAdd, onToggle, onDelete
           {count}
         </span>
       </div>
+      <p className="text-xs text-muted-foreground mb-4 px-1 italic">{hint}</p>
 
       <div className="space-y-3">
         {items.map((h) => (

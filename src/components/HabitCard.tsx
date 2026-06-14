@@ -30,21 +30,24 @@ export function HabitCard({ habit, onToggle, onDelete }: Props) {
     if (!doneToday) {
       setPulse(true);
       setTimeout(() => setPulse(false), 600);
-      // confetti — green for going, warm for friction (overcoming)
-      const colors = isFriction
-        ? ["#f59e0b", "#ef4444", "#fbbf24"]
-        : ["#10b981", "#34d399", "#a7f3d0"];
+      // Победа всегда зелёная (для friction — удержался, для going — сделал)
       confetti({
         particleCount: 60,
         spread: 55,
         startVelocity: 35,
         origin: { y: 0.7 },
-        colors,
+        colors: ["#10b981", "#34d399", "#a7f3d0"],
         scalar: 0.8,
       });
     }
     onToggle(habit.id);
   };
+
+  const statusLabel = doneToday
+    ? isFriction
+      ? "не делал сегодня"
+      : "сделал сегодня"
+    : null;
 
   return (
     <div
@@ -64,9 +67,7 @@ export function HabitCard({ habit, onToggle, onDelete }: Props) {
             "relative shrink-0 h-11 w-11 rounded-full border-2 flex items-center justify-center transition-all",
             "active:scale-90",
             doneToday
-              ? isFriction
-                ? "bg-friction border-friction text-friction-foreground"
-                : "bg-going border-going text-going-foreground"
+              ? "bg-going border-going text-going-foreground"
               : isFriction
                 ? "border-friction/40 hover:border-friction text-friction"
                 : "border-going/40 hover:border-going text-going",
@@ -78,9 +79,16 @@ export function HabitCard({ habit, onToggle, onDelete }: Props) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-medium text-base leading-snug text-foreground break-words">
-              {habit.name}
-            </h3>
+            <div className="min-w-0">
+              <h3 className="font-medium text-base leading-snug text-foreground break-words">
+                {habit.name}
+              </h3>
+              {statusLabel && (
+                <p className="mt-0.5 text-xs text-going font-medium animate-float-up">
+                  ✓ {statusLabel}
+                </p>
+              )}
+            </div>
             <button
               onClick={() => onDelete(habit.id)}
               className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity shrink-0"
