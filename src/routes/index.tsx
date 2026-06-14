@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Moon, Sun, Scale } from "lucide-react";
+import { Moon, Sun, Scale, BarChart3 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import {
   type Habit,
   type HabitType,
@@ -120,13 +121,22 @@ function App() {
               </p>
             </div>
           </div>
-          <button
-            onClick={toggleTheme}
-            aria-label="Сменить тему"
-            className="h-10 w-10 rounded-xl border border-border flex items-center justify-center hover:bg-accent transition-colors"
-          >
-            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/stats"
+              aria-label="Статистика"
+              className="h-10 w-10 rounded-xl border border-border flex items-center justify-center hover:bg-accent transition-colors"
+            >
+              <BarChart3 className="h-4 w-4" />
+            </Link>
+            <button
+              onClick={toggleTheme}
+              aria-label="Сменить тему"
+              className="h-10 w-10 rounded-xl border border-border flex items-center justify-center hover:bg-accent transition-colors"
+            >
+              {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </button>
+          </div>
         </header>
 
         {/* Hero line */}
