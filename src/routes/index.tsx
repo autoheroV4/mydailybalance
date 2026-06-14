@@ -162,7 +162,7 @@ function App() {
         </div>
 
         <footer className="mt-16 text-center text-xs text-muted-foreground">
-          Данные хранятся в вашем браузере. Без аккаунтов, без облака.
+          Данные хранятся в вашем браузере. Без аккаунтов, без облака. Made by autohero
         </footer>
       </div>
     </div>
