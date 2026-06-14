@@ -131,24 +131,24 @@ function ChartBlock({
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis
               dataKey="day"
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               allowDecimals={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip
-              cursor={{ fill: "hsl(var(--accent))", opacity: 0.3 }}
+              cursor={{ fill: "var(--accent)", opacity: 0.3 }}
               contentStyle={{
-                background: "hsl(var(--background))",
-                border: "1px solid hsl(var(--border))",
+                background: "var(--background)",
+                border: "1px solid var(--border)",
                 borderRadius: 12,
                 fontSize: 12,
               }}
