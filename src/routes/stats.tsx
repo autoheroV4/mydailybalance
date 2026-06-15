@@ -52,7 +52,9 @@ function Stats() {
 
   const data = useMemo(() => {
     const days = currentWeekMonToSun();
+    const today = todayKey();
     return days.map((day, i) => {
+      const isFuture = day > today;
       let frictionDone = 0;
       let goingDone = 0;
       for (const h of habits) {
@@ -61,12 +63,14 @@ function Stats() {
           else goingDone++;
         }
       }
-      // Friction: чем больше отмечено (= удержался), тем НИЖЕ столбик
-      const frictionBar = Math.max(0, frictionTotal - frictionDone);
+      // Friction: чем больше отмечено (= удержался), тем НИЖЕ столбик.
+      // Для будущих дней показываем 0, чтобы не выглядело "всё плохо".
+      const frictionBar = isFuture ? 0 : Math.max(0, frictionTotal - frictionDone);
+      const goingBar = isFuture ? 0 : goingDone;
       return {
         day: DAY_LABELS[i],
         Friction: frictionBar,
-        "Going Well": goingDone,
+        "Going Well": goingBar,
       };
     });
   }, [habits, frictionTotal]);
