@@ -9,9 +9,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
-import { loadHabits, last7Days, type Habit } from "@/lib/habits";
+import { loadHabits, todayKey, type Habit } from "@/lib/habits";
 
 export const Route = createFileRoute("/stats")({
   head: () => ({
@@ -23,9 +22,22 @@ export const Route = createFileRoute("/stats")({
   component: Stats,
 });
 
-function dayLabel(iso: string): string {
-  const d = new Date(iso);
-  return ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][d.getDay()];
+const DAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+// Возвращает 7 дат с понедельника текущей недели по воскресенье.
+function currentWeekMonToSun(): string[] {
+  const today = new Date();
+  const dow = today.getDay(); // 0=Вс..6=Сб
+  const offsetToMonday = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + offsetToMonday);
+  const days: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(todayKey(d));
+  }
+  return days;
 }
 
 function Stats() {
@@ -35,23 +47,31 @@ function Stats() {
     setHabits(loadHabits());
   }, []);
 
+  const frictionTotal = habits.filter((h) => h.type === "friction").length;
+  const goingTotal = habits.filter((h) => h.type === "going").length;
+
   const data = useMemo(() => {
-    const days = last7Days();
-    return days.map((day) => {
-      let friction = 0;
-      let going = 0;
+    const days = currentWeekMonToSun();
+    return days.map((day, i) => {
+      let frictionDone = 0;
+      let goingDone = 0;
       for (const h of habits) {
         if (h.completions.includes(day)) {
-          if (h.type === "friction") friction++;
-          else going++;
+          if (h.type === "friction") frictionDone++;
+          else goingDone++;
         }
       }
-      return { day: dayLabel(day), date: day, Friction: friction, "Going Well": going };
+      // Friction: чем больше отмечено (= удержался), тем НИЖЕ столбик
+      const frictionBar = Math.max(0, frictionTotal - frictionDone);
+      return {
+        day: DAY_LABELS[i],
+        Friction: frictionBar,
+        "Going Well": goingDone,
+      };
     });
-  }, [habits]);
+  }, [habits, frictionTotal]);
 
-  const totalFriction = data.reduce((s, d) => s + d.Friction, 0);
-  const totalGoing = data.reduce((s, d) => s + (d["Going Well"] as number), 0);
+  const maxY = Math.max(frictionTotal, goingTotal, 1);
 
   return (
     <div className="min-h-screen">
@@ -69,94 +89,65 @@ function Stats() {
         </header>
 
         <div className="mb-8 max-w-2xl">
-          <p className="font-display text-2xl sm:text-3xl leading-tight">
-            Последние <span className="italic">7 дней</span>
+          <p className="font-display text-3xl sm:text-4xl leading-tight">
+            Эта <span className="italic">неделя</span>
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Сколько привычек отмечено каждый день.
+            С понедельника по воскресенье.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <StatCard label="Friction всего" value={totalFriction} tone="friction" />
-          <StatCard label="Going Well всего" value={totalGoing} tone="going" />
+        <div className="rounded-2xl border border-border p-4 sm:p-6 bg-card">
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={data}
+                margin={{ top: 8, right: 8, bottom: 0, left: -20 }}
+                barCategoryGap="25%"
+                barGap={4}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  domain={[0, maxY]}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  cursor={{ fill: "var(--accent)", opacity: 0.3 }}
+                  contentStyle={{
+                    background: "var(--background)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                />
+                <Bar dataKey="Friction" fill="var(--friction)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Going Well" fill="var(--going)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full bg-friction inline-block" />
+              <span className="font-medium">Friction</span>
+              <span className="text-muted-foreground">— чем ниже тем лучше</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full bg-going inline-block" />
+              <span className="font-medium">Going Well</span>
+              <span className="text-muted-foreground">— чем выше тем лучше</span>
+            </div>
+          </div>
         </div>
-
-        <ChartBlock title="Friction" color="var(--friction)" data={data} dataKey="Friction" />
-        <div className="h-8" />
-        <ChartBlock title="Going Well" color="var(--going)" data={data} dataKey="Going Well" />
-      </div>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "friction" | "going";
-}) {
-  return (
-    <div
-      className={
-        "rounded-2xl border border-border p-5 " +
-        (tone === "friction" ? "bg-friction-muted" : "bg-going-muted")
-      }
-    >
-      <div className={"text-xs " + (tone === "friction" ? "text-friction" : "text-going")}>
-        {label}
-      </div>
-      <div className="font-display text-3xl mt-1">{value}</div>
-    </div>
-  );
-}
-
-function ChartBlock({
-  title,
-  color,
-  data,
-  dataKey,
-}: {
-  title: string;
-  color: string;
-  data: Array<Record<string, string | number>>;
-  dataKey: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border p-4 sm:p-6 bg-card">
-      <h2 className="font-display text-xl mb-4">{title}</h2>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-            <XAxis
-              dataKey="day"
-              tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              allowDecimals={false}
-              tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip
-              cursor={{ fill: "var(--accent)", opacity: 0.3 }}
-              contentStyle={{
-                background: "var(--background)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                fontSize: 12,
-              }}
-            />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey={dataKey} fill={color} radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
       </div>
     </div>
   );
